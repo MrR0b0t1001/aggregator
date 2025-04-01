@@ -1,18 +1,12 @@
 package config
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	dbpk "github.com/MrR0b0t1001/aggregator/internal/database"
-	"github.com/google/uuid"
 )
 
 const configFileName = ".gatorconfig.json"
@@ -27,53 +21,40 @@ type State struct {
 	DB        *dbpk.Queries
 }
 
-type Command struct {
-	Name string
-	Args []string
-}
-
-type Commands struct {
-	CommandsMap map[string]func(*State, Command) error
-}
-
-func (c *Commands) Register(name string, f func(*State, Command) error) {
-	_, ok := c.CommandsMap[name]
-	if !ok {
-		c.CommandsMap[name] = f
+func NewState() (*State, error) {
+	// Initialize with default empty config
+	state := &State{
+		CurrState: &Config{},
+		DB:        nil,
 	}
 
-	return
-}
+	// Try to load existing config
+	configPath := getConfigFilePath()
 
-func (c *Commands) Run(s *State, cmd Command) error {
-	f, ok := c.CommandsMap[cmd.Name]
-	if !ok {
-		return errors.New("Command does not exist")
+	if _, err := os.Stat(configPath); err == nil {
+		// Config file exists, load it
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(data, &state.CurrState); err != nil {
+			return nil, err
+		}
 	}
 
-	f(s, cmd)
-
-	return nil
+	return state, nil
 }
 
 /////////////////////////////////////////////////////////////////
 
-func (c Config) SetUser(username string) error {
+func (c *Config) SetUser(username string) error {
 	c.CurrentUserName = username
-
-	err := write(c)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return write(*c)
 }
 
 func Read() Config {
-	filepath, err := getConfigFilePath()
-	if err != nil {
-		return Config{}
-	}
+	filepath := getConfigFilePath()
 
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -91,88 +72,23 @@ func Read() Config {
 	return config
 }
 
-func getConfigFilePath() (string, error) {
+func getConfigFilePath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		log.Println("Path incorrect")
+		return ""
 	}
 
 	filepath := filepath.Join(homeDir, configFileName)
 
-	return filepath, nil
+	return filepath
 }
 
-func write(cfg Config) error {
-	filepath, err := getConfigFilePath()
+func write(config Config) error {
+	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Create(filepath)
-	if err != nil {
-		return nil
-	}
-
-	defer file.Close()
-
-	jsonData, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	if _, err := file.Write(jsonData); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func HandlerLogin(s *State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return errors.New("Username not provided.")
-	}
-
-	user, err := s.DB.GetUser(context.Background(), cmd.Args[0])
-	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("User does not exist")
-			os.Exit(1)
-		}
-
-		return err
-	}
-
-	if err := s.CurrState.SetUser(user.Name); err != nil {
-		return err
-	}
-
-	log.Print("User has been set")
-
-	return nil
-}
-
-func HandlerRegister(s *State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return errors.New("Username not provided.")
-	}
-
-	arg := dbpk.CreateUserParams{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Name:      os.Args[2],
-	}
-
-	user, err := s.DB.CreateUser(context.Background(), arg)
-	if err != nil {
-		fmt.Println("User Not created")
-		os.Exit(1)
-	}
-
-	fmt.Println("User Created")
-
-	s.CurrState.SetUser(user.Name)
-	log.Println(user)
-
-	return nil
+	return os.WriteFile(getConfigFilePath(), data, 0)
 }

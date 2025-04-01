@@ -3,15 +3,23 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
+	cmd "github.com/MrR0b0t1001/aggregator/internal/commands"
 	cnfg "github.com/MrR0b0t1001/aggregator/internal/config"
 	dbpk "github.com/MrR0b0t1001/aggregator/internal/database"
+
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	config := cnfg.Read()
+
+	state, err := cnfg.NewState()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := sql.Open("postgres", config.DBUrl)
 	if err != nil {
@@ -19,29 +27,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	state := &cnfg.State{
-		CurrState: &config,
-		DB:        dbpk.New(db),
-	}
+	state.DB = dbpk.New(db)
 
-	c := cnfg.Commands{
-		CommandsMap: make(map[string]func(*cnfg.State, cnfg.Command) error),
-	}
+	commands := cmd.NewCommands()
 
 	if len(os.Args) < 2 {
-		fmt.Println("Not enough arguments were provided")
-		os.Exit(1)
-	} else if len(os.Args) < 3 {
-		fmt.Println("Username is required")
+		fmt.Println("Not enough arguments")
 		os.Exit(1)
 	}
 
-	c.Register("login", cnfg.HandlerLogin)
-	c.Register("register", cnfg.HandlerRegister)
-
-	cmd := cnfg.Command{
+	command := cmd.Command{
 		Name: os.Args[1],
 		Args: os.Args[2:],
 	}
-	c.Run(state, cmd)
+
+	if err := commands.Run(state, command); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
