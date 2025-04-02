@@ -35,14 +35,12 @@ func HandlerLogin(s *cnfg.State, cmd Command) error {
 }
 
 func HandlerRegister(s *cnfg.State, cmd Command) error {
-	arg := dbpk.CreateUserParams{
+	user, err := s.DB.CreateUser(context.Background(), dbpk.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Name:      cmd.Args[0],
-	}
-
-	user, err := s.DB.CreateUser(context.Background(), arg)
+	})
 	if err != nil {
 		fmt.Println("User Not created")
 		os.Exit(1)

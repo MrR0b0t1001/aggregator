@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	cmd "github.com/MrR0b0t1001/aggregator/internal/commands"
 	cnfg "github.com/MrR0b0t1001/aggregator/internal/config"
@@ -42,7 +43,11 @@ func main() {
 	}
 
 	if err := commands.Run(state, command); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		if strings.Contains(err.Error(), "unique constraint") {
+			log.Println("the feed already exists. Attempting to follow it...")
+		} else {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }

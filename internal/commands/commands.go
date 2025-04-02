@@ -30,6 +30,8 @@ func NewCommands() *Commands {
 	cmds.Register("agg", HandlerAgg)
 	cmds.Register("addfeed", HandlerAddFeed)
 	cmds.Register("feeds", HandlerFeeds)
+	cmds.Register("follow", HandlerFollow)
+	cmds.Register("following", HandlerFollowing)
 
 	return cmds
 }
@@ -53,6 +55,11 @@ func (c *Commands) Run(s *config.State, cmd Command) error {
 		if len(cmd.Args) < 2 {
 			return fmt.Errorf("%s command requires a title and url", cmd.Name)
 		}
+	case "follow":
+		if len(cmd.Args) < 1 {
+			return fmt.Errorf("%s command requires a url", cmd.Name)
+		}
+
 	default:
 	}
 
