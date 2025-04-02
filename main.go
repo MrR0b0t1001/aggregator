@@ -14,6 +14,11 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Not enough arguments")
+		os.Exit(1)
+	}
+
 	config := cnfg.Read()
 
 	state, err := cnfg.NewState()
@@ -30,11 +35,6 @@ func main() {
 	state.DB = dbpk.New(db)
 
 	commands := cmd.NewCommands()
-
-	if len(os.Args) < 2 {
-		fmt.Println("Not enough arguments")
-		os.Exit(1)
-	}
 
 	command := cmd.Command{
 		Name: os.Args[1],

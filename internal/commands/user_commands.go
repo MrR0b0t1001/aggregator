@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,10 +15,6 @@ import (
 )
 
 func HandlerLogin(s *cnfg.State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return errors.New("Username not provided.")
-	}
-
 	user, err := s.DB.GetUser(context.Background(), cmd.Args[0])
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -40,10 +35,6 @@ func HandlerLogin(s *cnfg.State, cmd Command) error {
 }
 
 func HandlerRegister(s *cnfg.State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return errors.New("Username not provided.")
-	}
-
 	arg := dbpk.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),

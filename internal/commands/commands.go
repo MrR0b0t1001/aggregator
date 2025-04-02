@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	// Your imports
 	"github.com/MrR0b0t1001/aggregator/internal/config"
 	// other imports
@@ -27,6 +28,8 @@ func NewCommands() *Commands {
 	cmds.Register("reset", HandlerReset)
 	cmds.Register("users", HandlerUsers)
 	cmds.Register("agg", HandlerAgg)
+	cmds.Register("addfeed", HandlerAddFeed)
+	cmds.Register("feeds", HandlerFeeds)
 
 	return cmds
 }
@@ -39,6 +42,18 @@ func (c *Commands) Run(s *config.State, cmd Command) error {
 	f, ok := c.CommandsMap[cmd.Name]
 	if !ok {
 		return errors.New("Command does not exist")
+	}
+
+	switch cmd.Name {
+	case "login", "register":
+		if len(cmd.Args) < 1 {
+			return fmt.Errorf("%s command requires a username", cmd.Name)
+		}
+	case "addfeed":
+		if len(cmd.Args) < 2 {
+			return fmt.Errorf("%s command requires a title and url", cmd.Name)
+		}
+	default:
 	}
 
 	f(s, cmd)
