@@ -3,6 +3,7 @@ package rss
 import (
 	"context"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -44,6 +45,7 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	feed := RSSFeed{}
 
 	if err := xml.Unmarshal(data, &feed); err != nil {
+		fmt.Println("4")
 		return &RSSFeed{}, err
 	}
 

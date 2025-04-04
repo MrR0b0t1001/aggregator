@@ -16,6 +16,7 @@ CREATE TABLE feeds (
   CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+
 CREATE TABLE feed_follows (
   id UUID PRIMARY KEY, 
   created_at TIMESTAMP NOT NULL, 
@@ -32,4 +33,6 @@ CREATE TABLE feed_follows (
 DROP TABLE feed_follows;
 DROP TABLE feeds;
 DROP TABLE users;
+
+
 

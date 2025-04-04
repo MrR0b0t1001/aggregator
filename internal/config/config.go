@@ -22,17 +22,14 @@ type State struct {
 }
 
 func NewState() (*State, error) {
-	// Initialize with default empty config
 	state := &State{
 		CurrState: &Config{},
 		DB:        nil,
 	}
 
-	// Try to load existing config
 	configPath := getConfigFilePath()
 
 	if _, err := os.Stat(configPath); err == nil {
-		// Config file exists, load it
 		data, err := os.ReadFile(configPath)
 		if err != nil {
 			return nil, err

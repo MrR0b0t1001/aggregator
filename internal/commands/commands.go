@@ -3,9 +3,8 @@ package commands
 import (
 	"errors"
 	"fmt"
-	// Your imports
+
 	"github.com/MrR0b0t1001/aggregator/internal/config"
-	// other imports
 )
 
 type Command struct {
@@ -28,10 +27,11 @@ func NewCommands() *Commands {
 	cmds.Register("reset", HandlerReset)
 	cmds.Register("users", HandlerUsers)
 	cmds.Register("agg", HandlerAgg)
-	cmds.Register("addfeed", HandlerAddFeed)
 	cmds.Register("feeds", HandlerFeeds)
-	cmds.Register("follow", HandlerFollow)
-	cmds.Register("following", HandlerFollowing)
+	cmds.Register("addfeed", MiddlewareLoggedIn(HandlerAddFeed))
+	cmds.Register("follow", MiddlewareLoggedIn(HandlerFollow))
+	cmds.Register("following", MiddlewareLoggedIn(HandlerFollowing))
+	cmds.Register("unfollow", MiddlewareLoggedIn(HandlerUnfollow))
 
 	return cmds
 }
@@ -55,9 +55,13 @@ func (c *Commands) Run(s *config.State, cmd Command) error {
 		if len(cmd.Args) < 2 {
 			return fmt.Errorf("%s command requires a title and url", cmd.Name)
 		}
-	case "follow":
+	case "follow", "unfollow":
 		if len(cmd.Args) < 1 {
 			return fmt.Errorf("%s command requires a url", cmd.Name)
+		}
+	case "agg":
+		if len(cmd.Args) < 1 {
+			return fmt.Errorf("%s command requires a timer to be set", cmd.Name)
 		}
 
 	default:
