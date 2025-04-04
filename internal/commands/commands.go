@@ -32,6 +32,7 @@ func NewCommands() *Commands {
 	cmds.Register("follow", MiddlewareLoggedIn(HandlerFollow))
 	cmds.Register("following", MiddlewareLoggedIn(HandlerFollowing))
 	cmds.Register("unfollow", MiddlewareLoggedIn(HandlerUnfollow))
+	cmds.Register("browse", MiddlewareLoggedIn(HandlerBrowse))
 
 	return cmds
 }
@@ -63,7 +64,13 @@ func (c *Commands) Run(s *config.State, cmd Command) error {
 		if len(cmd.Args) < 1 {
 			return fmt.Errorf("%s command requires a timer to be set", cmd.Name)
 		}
-
+	case "browse":
+		if len(cmd.Args) >= 2 {
+			return fmt.Errorf(
+				"%s command only takes one argument. Limit of posts to browse",
+				cmd.Name,
+			)
+		}
 	default:
 	}
 
